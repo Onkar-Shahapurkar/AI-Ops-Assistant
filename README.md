@@ -64,6 +64,45 @@ hit.
 
 ## 🧠 System Architecture (How It Works)
 
+``` mermaid
+flowchart LR
+
+U[User]
+S[Streamlit UI]
+M[main.py Bootstraps System]
+
+P[Planner Agent]
+E[Executor Agent]
+V[Verifier Agent]
+
+TR[Tool Registry]
+
+G[Google Gemini LLM]
+F[Local Rule-Based Fallback]
+
+W[WeatherTool]
+N[NewsTool]
+
+WM[Open-Meteo API]
+NA[NewsAPI]
+
+U --> S
+S --> M
+M --> P
+P --> G
+P -.-> F
+P --> E
+E --> TR
+TR --> W
+TR --> N
+W --> WM
+N --> NA
+E --> V
+V --> S
+```
+
+------------------------------------------------------------------------
+
 ### 1️⃣ Planner Agent (Reasoning Layer)
 
 **Responsibilities:** - Interprets the user's natural language request -
@@ -297,6 +336,84 @@ Your new tool will automatically appear in the sidebar.
 
 ------------------------------------------------------------------------
 
+## 🔌 List of Integrated APIs
+
+This system integrates the following real, free third-party APIs:
+
+### 1) Open-Meteo API (Weather) --- Free
+
+Endpoint: https://api.open-meteo.com/v1/forecast
+
+Used for: - Current temperature - Wind speed - City-based weather lookup
+
+Rationale: - No API key required - Reliable and open-source - Suitable
+for real-time weather data
+
+### 2) NewsAPI --- Free Tier
+
+Endpoint: https://newsapi.org/v2/everything
+
+Used for: - Fetching recent news headlines - Query-based search (e.g.,
+"AI", "Epstein files", "Cybersecurity") - Returning structured article
+metadata (title, source, published date)
+
+Rationale: - Simple REST interface - Widely used in academic and
+industry prototypes - Sufficient for demonstration and evaluation
+
+------------------------------------------------------------------------
+
+## ⚠️ Known Limitations / Tradeoffs (Top 5)
+
+### 1) LLM Rate Limits (Gemini Free Tier)
+
+Limitation: - Google Gemini free tier can return 429 RESOURCE_EXHAUSTED.
+
+Tradeoff: - The system falls back to a rule-based planner, which is less
+capable than an LLM.
+
+Future Improvement: - Use a paid Gemini tier or a self-hosted local LLM
+(e.g., Llama).
+
+### 2) Limited City Recognition (Fallback Planner)
+
+Limitation: - The rule-based planner recognizes only a predefined list
+of cities (e.g., Mumbai, Delhi, Pune, Bangalore, Chennai).
+
+Tradeoff: - Works well for demos but fails for unseen cities (e.g.,
+"Jaipur", "New York").
+
+Future Improvement: - Integrate a geocoding API or LLM-based entity
+extraction.
+
+### 3) Sequential Tool Execution
+
+Limitation: - Tools execute one after another, not in parallel.
+
+Tradeoff: - Simpler design but slower for multiple tool calls.
+
+Future Improvement: - Implement parallel execution using asyncio or
+ThreadPoolExecutor.
+
+### 4) No Caching of API Responses
+
+Limitation: - Repeated queries always trigger fresh API calls.
+
+Tradeoff: - Higher latency and redundant API usage.
+
+Future Improvement: - Add in-memory caching (lru_cache) or Redis-based
+caching.
+
+### 5) No Persistent Task History
+
+Limitation: - The system does not store past user tasks or results.
+
+Tradeoff: - Cannot provide conversational or contextual continuity.
+
+Future Improvement: - Store task logs in SQLite or MongoDB for session
+memory and analytics.
+
+------------------------------------------------------------------------
+
 ## 🧪 Evaluation Checklist (For Reviewers)
 
 -   ✔ Multi-agent architecture implemented\
@@ -331,4 +448,3 @@ while running Streamlit
 
 ------------------------------------------------------------------------
 
-Happy experimenting with your AI Operations Assistant! 🚀
